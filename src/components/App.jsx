@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { nanoid } from 'nanoid';
 
-import Form from './Form/Form';
+import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
 import Filter from './Filter/Filter';
 
@@ -13,32 +13,22 @@ export class App extends Component {
 
   handlerFormSubmit = ({ name, number }) => {
     const { contacts } = this.state;
-    const ArrayNames = contacts.map(contact => contact.name.toLowerCase());
     const normalizeName = name.toLowerCase();
+    const ArrayNames = contacts.find(
+      contact => contact.name.toLowerCase() === normalizeName
+    );
 
-    if (ArrayNames.includes(normalizeName)) {
-      alert(`${name}вже є в книзі`);
+    if (ArrayNames) {
+      alert(`${name} вже є в книзі`);
       return;
     }
+
     this.setState(({ contacts }) => {
       return {
         contacts: [{ id: nanoid(), name: name, number: number }, ...contacts],
       };
     });
   };
-
-  componentDidMount() {
-    const contactsList = localStorage.getItem('contactsList');
-    const parsedContactsList = JSON.parse(contactsList);
-
-    if (contactsList) {
-      this.setState({ contacts: parsedContactsList });
-    }
-  }
-
-  componentDidUpdate() {
-    localStorage.setItem('contactsList', JSON.stringify(this.state.contacts));
-  }
 
   handlerInputFilter = e => this.setState({ filter: e.currentTarget.value });
 
@@ -56,6 +46,19 @@ export class App extends Component {
       contacts: prevState.contacts.filter(contact => contact.id !== contactId),
     }));
   };
+  componentDidMount() {
+    const contacts = localStorage.getItem('contacts');
+    const parseContacts = JSON.parse(contacts);
+    if (parseContacts) {
+      this.setState({ contacts: parseContacts });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.contacts !== prevState.contacts) {
+      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
+    }
+  }
 
   render() {
     const { filter } = this.state;
@@ -64,7 +67,7 @@ export class App extends Component {
     return (
       <>
         <h1>Phonebook</h1>
-        <Form onSubmitHendler={this.handlerFormSubmit}></Form>
+        <ContactForm onSubmitHendler={this.handlerFormSubmit}></ContactForm>
         <h2>Contacts</h2>
         <Filter
           text="Find contacts by name"
